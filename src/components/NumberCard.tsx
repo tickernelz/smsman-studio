@@ -22,7 +22,7 @@ import {
   IconCircleCheck,
 } from '@tabler/icons-react'
 import { api } from '../api/smsmanClient'
-import { useAppStore, ActiveRequest, useAccountToken, useAccountLabel } from '../store/useAppStore'
+import { useAppStore, ActiveRequest, useAccountToken, useAccountLabel, HistoryEntry } from '../store/useAppStore'
 import StatusBadge from './StatusBadge'
 
 const POLL_INTERVAL = 5
@@ -40,9 +40,20 @@ export default function NumberCard({ request }: { request: ActiveRequest }) {
     try {
       const res = await api.getSms(token, request.requestId)
       if (res.sms_code) {
-        const updated = { ...request, smsCode: res.sms_code, status: 'received' as const }
-        updateRequest(request.requestId, { smsCode: res.sms_code, status: 'received' })
-        addHistory({ ...updated, resolvedAt: new Date().toISOString() })
+        const resolvedAt = new Date().toISOString()
+        const historyEntry: HistoryEntry = {
+          ...request,
+          smsCode: res.sms_code,
+          status: 'received',
+          resolvedAt,
+        }
+        
+        updateRequest(request.requestId, { 
+          smsCode: res.sms_code, 
+          status: 'received' 
+        })
+        addHistory(historyEntry)
+        
         notifications.show({
           title: 'SMS Received!',
           message: `${request.number} → ${res.sms_code}`,
