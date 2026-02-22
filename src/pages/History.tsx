@@ -1,0 +1,153 @@
+import { useMemo } from 'react'
+import {
+  Stack,
+  Title,
+  Group,
+  ActionIcon,
+  Table,
+  Text,
+  Badge,
+  ScrollArea,
+  Tooltip,
+} from '@mantine/core'
+import { IconTrash, IconDownload } from '@tabler/icons-react'
+import { useAppStore, useActiveAccount } from '../store/useAppStore'
+import StatusBadge from '../components/StatusBadge'
+
+function exportCsv(data: ReturnType<typeof useAppStore.getState>['history']) {
+  const headers = [
+    'Time',
+    'Account',
+    'Request ID',
+    'Number',
+    'Country',
+    'Service',
+    'Status',
+    'SMS Code',
+  ]
+  const rows = data.map((h) => [
+    new Date(h.createdAt).toLocaleString(),
+    h.accountId,
+    h.requestId,
+    h.number,
+    h.countryName,
+    h.serviceName,
+    h.status,
+    h.smsCode ?? '',
+  ])
+  const csv = [headers, ...rows].map((r) => r.join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `smsman-history-${Date.now()}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export default function History() {
+  const { history, clearHistory } = useAppStore()
+  const activeAccount = useActiveAccount()
+  const activeAccountId = useAppStore((s) => s.activeAccountId)
+
+  const myHistory = useMemo(
+    () => history.filter((h) => h.accountId === activeAccountId),
+    [history, activeAccountId]
+  )
+
+  return (
+    <Stack>
+      <Group justify="space-between">
+        <Title order={3}>History</Title>
+        <Group gap="xs">
+          <Text size="sm" c="dimmed">
+            {myHistory.length} entries
+            {history.length !== myHistory.length && ` (${history.length} total)`}
+          </Text>
+          <Tooltip label="Export this account's history to CSV">
+            <ActionIcon
+              variant="light"
+              onClick={() => exportCsv(myHistory)}
+              disabled={myHistory.length === 0}
+            >
+              <IconDownload size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Clear this account's history">
+            <ActionIcon
+              variant="light"
+              color="red"
+              onClick={() => clearHistory(activeAccountId ?? undefined)}
+              disabled={myHistory.length === 0}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </Group>
+
+      {myHistory.length === 0 ? (
+        <Text c="dimmed" ta="center" py="xl">
+          No history for {activeAccount?.label ?? 'this account'} yet.
+        </Text>
+      ) : (
+        <ScrollArea h="calc(100vh - 180px)">
+          <Table striped highlightOnHover withTableBorder stickyHeader>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Time</Table.Th>
+                <Table.Th>Request ID</Table.Th>
+                <Table.Th>Number</Table.Th>
+                <Table.Th>Country</Table.Th>
+                <Table.Th>Service</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>SMS Code</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {myHistory.map((h, i) => (
+                <Table.Tr key={i}>
+                  <Table.Td>
+                    <Text size="xs" c="dimmed">
+                      {new Date(h.createdAt).toLocaleTimeString()}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text ff="monospace" size="xs">
+                      #{h.requestId}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text ff="monospace" size="sm">
+                      {h.number}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{h.countryName}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{h.serviceName}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <StatusBadge status={h.status} />
+                  </Table.Td>
+                  <Table.Td>
+                    {h.smsCode ? (
+                      <Badge color="green" variant="filled" size="sm">
+                        {h.smsCode}
+                      </Badge>
+                    ) : (
+                      <Text c="dimmed" size="sm">
+                        —
+                      </Text>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      )}
+    </Stack>
+  )
+}
