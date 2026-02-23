@@ -1,19 +1,19 @@
 import {
-  Grid,
-  Card,
-  Text,
-  Group,
-  Badge,
-  Skeleton,
   ActionIcon,
-  Stack,
-  Title,
+  Badge,
+  Card,
+  Grid,
+  Group,
   SimpleGrid,
-} from '@mantine/core'
-import { IconRefresh, IconDeviceMobile, IconStar } from '@tabler/icons-react'
-import { useQuery } from '@tanstack/react-query'
-import { api } from '../api/smsmanClient'
-import { useAppStore, useActiveAccount, useActiveAccountToken } from '../store/useAppStore'
+  Skeleton,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core"
+import { IconDeviceMobile, IconRefresh, IconStar } from "@tabler/icons-react"
+import { useQuery } from "@tanstack/react-query"
+import { api } from "../api/smsmanClient"
+import { useActiveAccount, useActiveAccountToken, useAppStore } from "../store/useAppStore"
 
 export default function Dashboard() {
   const activeAccount = useActiveAccount()
@@ -27,8 +27,11 @@ export default function Dashboard() {
     refetch,
     dataUpdatedAt,
   } = useQuery({
-    queryKey: ['balance', token],
-    queryFn: () => api.getBalance(token!),
+    queryKey: ["balance", token],
+    queryFn: () => {
+      if (!token) throw new Error("Token not available")
+      return api.getBalance(token)
+    },
     enabled: !!token,
     refetchInterval: 30_000,
   })

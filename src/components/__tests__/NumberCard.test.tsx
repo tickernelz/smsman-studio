@@ -1,8 +1,8 @@
-import { act } from '@testing-library/react'
-import { useAppStore } from '../../store/useAppStore'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { act } from "@testing-library/react"
+import { describe, it, expect, beforeEach } from "vitest"
+import { useAppStore } from "../../store/useAppStore"
 
-describe('NumberCard - Race Condition', () => {
+describe("NumberCard - Atomic Resolution", () => {
   beforeEach(() => {
     useAppStore.setState({
       activeRequests: [],
@@ -10,49 +10,36 @@ describe('NumberCard - Race Condition', () => {
     })
   })
 
-  it('should atomically update request and history when SMS received', async () => {
-    const { addRequest, updateRequest, addHistory } = useAppStore.getState()
+  it("should atomically resolve request with resolveRequest action", async () => {
+    const { addRequest, resolveRequest } = useAppStore.getState()
     
     addRequest({
       requestId: 123,
-      number: '+1234567890',
+      number: "+1234567890",
       countryId: 1,
       applicationId: 2,
-      countryName: 'Test',
-      serviceName: 'Telegram',
+      countryName: "Test",
+      serviceName: "Telegram",
       smsCode: null,
-      status: 'pending',
+      status: "pending",
       createdAt: new Date().toISOString(),
-      accountId: 'test-acc',
+      accountId: "test-acc",
     })
 
-    const smsCode = '5678'
-    const resolvedAt = new Date().toISOString()
+    const smsCode = "5678"
 
     act(() => {
-      updateRequest(123, { smsCode, status: 'received' })
-      addHistory({
-        requestId: 123,
-        number: '+1234567890',
-        countryId: 1,
-        applicationId: 2,
-        countryName: 'Test',
-        serviceName: 'Telegram',
-        smsCode,
-        status: 'received',
-        createdAt: new Date().toISOString(),
-        accountId: 'test-acc',
-        resolvedAt,
-      })
+      resolveRequest(123, smsCode)
     })
 
     const state = useAppStore.getState()
-    const activeReq = state.activeRequests.find(r => r.requestId === 123)
-    const historyEntry = state.history.find(h => h.requestId === 123)
+    const activeReq = state.activeRequests.find((r) => r.requestId === 123)
+    const historyEntry = state.history.find((h) => h.requestId === 123)
 
     expect(activeReq?.smsCode).toBe(smsCode)
-    expect(activeReq?.status).toBe('received')
+    expect(activeReq?.status).toBe("received")
     expect(historyEntry?.smsCode).toBe(smsCode)
-    expect(historyEntry?.resolvedAt).toBe(resolvedAt)
+    expect(historyEntry?.status).toBe("received")
+    expect(historyEntry?.resolvedAt).toBeDefined()
   })
 })

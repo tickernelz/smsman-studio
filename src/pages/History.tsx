@@ -1,18 +1,18 @@
-import { useMemo } from 'react'
 import {
-  Stack,
-  Title,
-  Group,
   ActionIcon,
+  Badge,
+  Group,
+  ScrollArea,
+  Stack,
   Table,
   Text,
-  Badge,
-  ScrollArea,
+  Title,
   Tooltip,
-} from '@mantine/core'
-import { IconTrash, IconDownload } from '@tabler/icons-react'
-import { useAppStore, useActiveAccount } from '../store/useAppStore'
-import StatusBadge from '../components/StatusBadge'
+} from "@mantine/core"
+import { IconDownload, IconTrash } from "@tabler/icons-react"
+import { useMemo } from "react"
+import StatusBadge from "../components/StatusBadge"
+import { useActiveAccount, useAppStore } from "../store/useAppStore"
 
 function exportCsv(data: ReturnType<typeof useAppStore.getState>['history']) {
   const headers = [
@@ -105,8 +105,8 @@ export default function History() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {myHistory.map((h, i) => (
-                <Table.Tr key={i}>
+              {myHistory.map((h) => (
+                <Table.Tr key={`${h.accountId}-${h.requestId}`}>
                   <Table.Td>
                     <Text size="xs" c="dimmed">
                       {new Date(h.createdAt).toLocaleTimeString()}

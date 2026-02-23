@@ -1,23 +1,23 @@
-import { useState, useMemo } from 'react'
 import {
-  Stack,
-  Title,
+  Button,
   Card,
-  Select,
+  Group,
   NumberInput,
   SegmentedControl,
-  Button,
-  Group,
-  Text,
+  Select,
   SimpleGrid,
+  Stack,
   Switch,
-} from '@mantine/core'
-import { notifications } from '@mantine/notifications'
-import { IconPlus } from '@tabler/icons-react'
-import { useQuery } from '@tanstack/react-query'
-import { api } from '../api/smsmanClient'
-import { useAppStore, useActiveAccount, useActiveAccountToken } from '../store/useAppStore'
-import NumberCard from '../components/NumberCard'
+  Text,
+  Title,
+} from "@mantine/core"
+import { notifications } from "@mantine/notifications"
+import { IconPlus } from "@tabler/icons-react"
+import { useQuery } from "@tanstack/react-query"
+import { useMemo, useState } from "react"
+import { api } from "../api/smsmanClient"
+import NumberCard from "../components/NumberCard"
+import { useActiveAccount, useActiveAccountToken, useAppStore } from "../store/useAppStore"
 
 export default function Numbers() {
   const activeAccount = useActiveAccount()
@@ -31,14 +31,20 @@ export default function Numbers() {
   const [loading, setLoading] = useState(false)
 
   const { data: countries } = useQuery({
-    queryKey: ['countries', token],
-    queryFn: () => api.getCountries(token!),
+    queryKey: ["countries", token],
+    queryFn: () => {
+      if (!token) throw new Error("Token not available")
+      return api.getCountries(token)
+    },
     enabled: !!token,
   })
 
   const { data: applications } = useQuery({
-    queryKey: ['applications', token],
-    queryFn: () => api.getApplications(token!),
+    queryKey: ["applications", token],
+    queryFn: () => {
+      if (!token) throw new Error("Token not available")
+      return api.getApplications(token)
+    },
     enabled: !!token,
   })
 

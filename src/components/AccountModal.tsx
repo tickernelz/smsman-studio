@@ -1,9 +1,17 @@
-import { useState } from 'react'
-import { Modal, TextInput, Button, Stack, Text, Alert, PasswordInput } from '@mantine/core'
-import { IconKey, IconAlertCircle, IconUser } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
-import { api } from '../api/smsmanClient'
-import { useAppStore, Account } from '../store/useAppStore'
+import {
+  Alert,
+  Button,
+  Modal,
+  PasswordInput,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core"
+import { notifications } from "@mantine/notifications"
+import { IconAlertCircle, IconKey, IconUser } from "@tabler/icons-react"
+import { useState } from "react"
+import { api } from "../api/smsmanClient"
+import { useAppStore, type Account } from "../store/useAppStore"
 
 interface Props {
   opened: boolean

@@ -39,6 +39,7 @@ interface AppStore {
   addRequest: (req: ActiveRequest) => void
   updateRequest: (requestId: number, patch: Partial<ActiveRequest>) => void
   removeRequest: (requestId: number) => void
+  resolveRequest: (requestId: number, smsCode: string) => void
 
   history: HistoryEntry[]
   addHistory: (entry: HistoryEntry) => void
@@ -92,6 +93,20 @@ export const useAppStore = create<AppStore>()(
         set((s) => ({
           activeRequests: s.activeRequests.filter((r) => r.requestId !== requestId),
         })),
+
+      resolveRequest: (requestId, smsCode) =>
+        set((s) => {
+          const request = s.activeRequests.find((r) => r.requestId === requestId)
+          if (!request) return s
+          const resolvedAt = new Date().toISOString()
+          const historyEntry: HistoryEntry = { ...request, smsCode, status: 'received', resolvedAt }
+          return {
+            activeRequests: s.activeRequests.map((r) =>
+              r.requestId === requestId ? { ...r, smsCode, status: 'received' } : r
+            ),
+            history: [historyEntry, ...s.history].slice(0, 500),
+          }
+        }),
 
       history: [],
 

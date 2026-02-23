@@ -1,84 +1,73 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  Card,
-  Group,
-  Text,
   ActionIcon,
-  Stack,
-  RingProgress,
   Badge,
-  Tooltip,
-  Menu,
+  Card,
   CopyButton,
+  Group,
+  Menu,
+  RingProgress,
+  Stack,
+  Text,
+  Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
-  IconCopy,
-  IconCheck,
-  IconDots,
-  IconX,
-  IconPlayerPlay,
   IconBan,
+  IconCheck,
   IconCircleCheck,
+  IconCopy,
+  IconDots,
+  IconPlayerPlay,
+  IconX,
 } from '@tabler/icons-react'
 import { api } from '../api/smsmanClient'
-import { useAppStore, ActiveRequest, useAccountToken, useAccountLabel, HistoryEntry } from '../store/useAppStore'
+import { useAppStore, useAccountLabel, useAccountToken, type ActiveRequest } from '../store/useAppStore'
 import StatusBadge from './StatusBadge'
 
 const POLL_INTERVAL = 5
 
 export default function NumberCard({ request }: { request: ActiveRequest }) {
-  const { updateRequest, removeRequest, addHistory } = useAppStore()
+  const { resolveRequest, removeRequest, updateRequest, addHistory } = useAppStore()
   const token = useAccountToken(request.accountId)
   const accountLabel = useAccountLabel(request.accountId)
   const [countdown, setCountdown] = useState(POLL_INTERVAL)
+  const requestRef = useRef(request)
+  const tokenRef = useRef(token)
+
+  requestRef.current = request
+  tokenRef.current = token
 
   const shouldPoll = request.status === 'pending' || request.status === 'ready'
-
-  const pollSms = useCallback(async () => {
-    if (!token) return
-    try {
-      const res = await api.getSms(token, request.requestId)
-      if (res.sms_code) {
-        const resolvedAt = new Date().toISOString()
-        const historyEntry: HistoryEntry = {
-          ...request,
-          smsCode: res.sms_code,
-          status: 'received',
-          resolvedAt,
-        }
-        
-        updateRequest(request.requestId, { 
-          smsCode: res.sms_code, 
-          status: 'received' 
-        })
-        addHistory(historyEntry)
-        
-        notifications.show({
-          title: 'SMS Received!',
-          message: `${request.number} → ${res.sms_code}`,
-          color: 'green',
-          autoClose: 8000,
-        })
-      }
-    } catch {
-      // wait_sms is not a real error — silent
-    }
-  }, [token, request, updateRequest, addHistory])
 
   useEffect(() => {
     if (!shouldPoll) return
     const tick = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) {
-          pollSms()
+          const currentToken = tokenRef.current
+          const currentRequest = requestRef.current
+          if (!currentToken) return POLL_INTERVAL
+          api.getSms(currentToken, currentRequest.requestId)
+            .then((res) => {
+              if (res.sms_code) {
+                resolveRequest(currentRequest.requestId, res.sms_code)
+                notifications.show({
+                  title: 'SMS Received!',
+                  message: `${currentRequest.number} → ${res.sms_code}`,
+                  color: 'green',
+                  autoClose: 8000,
+                })
+              }
+            })
+            .catch(() => {})
           return POLL_INTERVAL
         }
         return c - 1
       })
     }, 1000)
     return () => clearInterval(tick)
-  }, [shouldPoll, pollSms])
+  }, [shouldPoll, resolveRequest])
 
   const handleSetStatus = async (s: 'ready' | 'close' | 'reject' | 'used') => {
     if (!token) return

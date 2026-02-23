@@ -1,42 +1,43 @@
-import { useState } from 'react'
 import {
-  AppShell,
-  Group,
-  Text,
   ActionIcon,
-  NavLink,
-  Stack,
-  Badge,
-  Menu,
+  AppShell,
   Avatar,
-  Divider,
-  ScrollArea,
+  Badge,
   Button,
+  Divider,
+  Group,
+  Menu,
+  NavLink,
+  ScrollArea,
+  Stack,
+  Text,
+  Tooltip,
   useComputedColorScheme,
   useMantineColorScheme,
-  Tooltip,
-} from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+} from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
 import {
-  IconSun,
-  IconMoon,
+  IconChevronDown,
+  IconCurrencyDollar,
   IconDashboard,
   IconDeviceMobile,
-  IconCurrencyDollar,
-  IconWorld,
-  IconHistory,
-  IconPlus,
-  IconChevronDown,
   IconEdit,
+  IconHistory,
+  IconMoon,
+  IconPlus,
+  IconSun,
   IconTrash,
-} from '@tabler/icons-react'
-import { useAppStore, useActiveAccount } from '../store/useAppStore'
-import AccountModal from './AccountModal'
-import Dashboard from '../pages/Dashboard'
-import Numbers from '../pages/Numbers'
-import Prices from '../pages/Prices'
-import Explorer from '../pages/Explorer'
-import History from '../pages/History'
+  IconWorld,
+} from "@tabler/icons-react"
+import { lazy, useState } from "react"
+import { useActiveAccount, useAppStore } from "../store/useAppStore"
+import AccountModal from "./AccountModal"
+
+const Dashboard = lazy(() => import("../pages/Dashboard"))
+const Numbers = lazy(() => import("../pages/Numbers"))
+const Prices = lazy(() => import("../pages/Prices"))
+const Explorer = lazy(() => import("../pages/Explorer"))
+const History = lazy(() => import("../pages/History"))
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },

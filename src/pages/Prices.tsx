@@ -1,23 +1,23 @@
-import { useState, useMemo, useCallback } from 'react'
 import {
-  Stack,
-  Title,
-  Group,
-  Select,
-  Button,
-  Table,
   Badge,
-  Text,
-  ScrollArea,
-  Skeleton,
-  TextInput,
+  Button,
+  Group,
   Pagination,
-} from '@mantine/core'
-import { IconRefresh, IconSearch } from '@tabler/icons-react'
-import { useQuery } from '@tanstack/react-query'
-import { useDebouncedValue } from '@mantine/hooks'
-import { api, PriceEntry } from '../api/smsmanClient'
-import { useActiveAccount, useActiveAccountToken } from '../store/useAppStore'
+  ScrollArea,
+  Select,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core"
+import { useDebouncedValue } from "@mantine/hooks"
+import { IconRefresh, IconSearch } from "@tabler/icons-react"
+import { useQuery } from "@tanstack/react-query"
+import { useCallback, useMemo, useState } from "react"
+import { api, type PriceEntry } from "../api/smsmanClient"
+import { useActiveAccount, useActiveAccountToken } from "../store/useAppStore"
 
 const PAGE_SIZE = 50
 
@@ -31,13 +31,19 @@ export default function Prices() {
 
   const { data: countries } = useQuery({
     queryKey: ['countries', token],
-    queryFn: () => api.getCountries(token!),
+    queryFn: () => {
+      if (!token) throw new Error('Token not available')
+      return api.getCountries(token)
+    },
     enabled: !!token,
   })
 
   const { data: applications } = useQuery({
     queryKey: ['applications', token],
-    queryFn: () => api.getApplications(token!),
+    queryFn: () => {
+      if (!token) throw new Error('Token not available')
+      return api.getApplications(token)
+    },
     enabled: !!token,
   })
 
@@ -47,7 +53,10 @@ export default function Prices() {
     refetch,
   } = useQuery({
     queryKey: ['prices', token, countryId],
-    queryFn: () => api.getPrices(token!, countryId ? Number(countryId) : undefined),
+    queryFn: () => {
+      if (!token) throw new Error('Token not available')
+      return api.getPrices(token, countryId ? Number(countryId) : undefined)
+    },
     enabled: !!token && !!countryId,
   })
 
