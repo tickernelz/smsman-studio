@@ -1,7 +1,43 @@
-# Tauri + React + Typescript
+# SMSman Studio
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Desktop client for SMS-man API. Manage multiple accounts, request phone numbers, and receive SMS codes.
 
-## Recommended IDE Setup
+## Features
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- Multi-account management
+- Real-time balance & status monitoring
+- Phone number requests with country/service filters
+- Auto-polling for SMS codes
+- Request history with CSV export
+- Dark/light mode
+
+## Tech Stack
+
+- Tauri 2 + React 19 + TypeScript
+- Mantine UI + TanStack Query
+- Zustand state management
+
+## Development
+
+```bash
+npm install
+npm run dev          # Start dev server
+npm run build        # Production build
+npm test             # Run tests
+```
+
+## Build
+
+```bash
+npm run tauri build  # Build desktop app
+```
+
+## Security
+
+- Strict CSP headers
+- API token validation
+- Error boundary protection
+
+## License
+
+MIT
