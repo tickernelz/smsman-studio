@@ -17,12 +17,12 @@ import { IconRefresh, IconSearch } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { api, type PriceEntry } from "../api/smsmanClient"
-import { useActiveAccount, useActiveAccountToken } from "../store/useAppStore"
+import { useActiveAccountId, useActiveAccountToken } from "../store/useAppStore"
 
 const PAGE_SIZE = 50
 
 export default function Prices() {
-  const activeAccount = useActiveAccount()
+  const activeAccountId = useActiveAccountId()
   const token = useActiveAccountToken()
   const [countryId, setCountryId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -60,9 +60,13 @@ export default function Prices() {
     enabled: !!token && !!countryId,
   })
 
-  const countryOptions = countries
-    ? Object.values(countries).map((c) => ({ value: c.id, label: `${c.code} · ${c.title}` }))
-    : []
+  const countryOptions = useMemo(
+    () =>
+      countries
+        ? Object.values(countries).map((c) => ({ value: c.id, label: `${c.code} · ${c.title}` }))
+        : [],
+    [countries]
+  )
 
   const rows = useMemo(() => {
     if (!prices || Array.isArray(prices)) return []
@@ -130,7 +134,7 @@ export default function Prices() {
     setPage(1)
   }, [])
 
-  if (!activeAccount) {
+  if (!activeAccountId) {
     return (
       <Stack align="center" pt="xl">
         <Text c="dimmed">No active account selected.</Text>

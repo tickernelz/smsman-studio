@@ -12,11 +12,13 @@ import {
 } from "@mantine/core"
 import { IconDeviceMobile, IconRefresh, IconStar } from "@tabler/icons-react"
 import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { api } from "../api/smsmanClient"
-import { useActiveAccount, useActiveAccountToken, useAppStore } from "../store/useAppStore"
+import { useActiveAccountId, useActiveAccountLabel, useActiveAccountToken, useAppStore } from "../store/useAppStore"
 
 export default function Dashboard() {
-  const activeAccount = useActiveAccount()
+  const activeAccountId = useActiveAccountId()
+  const activeAccountLabel = useActiveAccountLabel()
   const token = useActiveAccountToken()
   const activeRequests = useAppStore((s) => s.activeRequests)
   const accounts = useAppStore((s) => s.accounts)
@@ -37,10 +39,14 @@ export default function Dashboard() {
   })
 
   const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : '—'
-  const myRequests = activeRequests.filter((r) => r.accountId === activeAccount?.id)
-  const receivedCount = myRequests.filter((r) => r.smsCode).length
+  const myRequests = useMemo(
+    () => activeRequests.filter((r) => r.accountId === activeAccountId),
+    [activeRequests, activeAccountId]
+  )
+  const receivedCount = useMemo(() => myRequests.filter((r) => r.smsCode).length, [myRequests])
+  const activeRequestsCount = myRequests.length
 
-  if (!activeAccount) {
+  if (!activeAccountId) {
     return (
       <Stack align="center" pt="xl">
         <Text c="dimmed">No active account selected.</Text>
@@ -53,7 +59,7 @@ export default function Dashboard() {
       <Group justify="space-between">
         <Title order={3}>Dashboard</Title>
         <Text size="xs" c="dimmed">
-          Account: {activeAccount.label}
+          Account: {activeAccountLabel}
         </Text>
       </Group>
 
@@ -142,7 +148,7 @@ export default function Dashboard() {
             <Group justify="space-between" mb="sm">
               <Text fw={500}>Active Requests</Text>
               <Badge leftSection={<IconDeviceMobile size={11} />} variant="light">
-                {myRequests.length} active · {receivedCount} received
+                {activeRequestsCount} active · {receivedCount} received
               </Badge>
             </Group>
             {myRequests.length === 0 ? (
@@ -184,26 +190,16 @@ export default function Dashboard() {
               <Badge variant="light">{accounts.length}</Badge>
             </Group>
             <Stack gap="xs">
-              {accounts.map((acc) => {
-                const accRequests = activeRequests.filter((r) => r.accountId === acc.id)
-                return (
-                  <Group key={acc.id} justify="space-between" wrap="nowrap">
-                    <Text size="sm" truncate maw={140}>
-                      {acc.label}
-                    </Text>
-                    <Group gap={6}>
-                      {accRequests.length > 0 && (
-                        <Badge size="xs" color="blue" variant="light">
-                          {accRequests.length} active
-                        </Badge>
-                      )}
-                      <Text size="xs" c="dimmed">
-                        {new Date(acc.createdAt).toLocaleDateString()}
-                      </Text>
-                    </Group>
-                  </Group>
-                )
-              })}
+              {accounts.map((acc) => (
+                <Group key={acc.id} justify="space-between" wrap="nowrap">
+                  <Text size="sm" truncate maw={140}>
+                    {acc.label}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {new Date(acc.createdAt).toLocaleDateString()}
+                  </Text>
+                </Group>
+              ))}
             </Stack>
           </Card>
         </Grid.Col>

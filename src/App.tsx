@@ -1,11 +1,9 @@
 import { Button, Center, Stack, Text, Title } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import { IconPlus } from "@tabler/icons-react"
-import { lazy } from "react"
 import AccountModal from "./components/AccountModal"
+import Layout from "./components/Layout"
 import { useAppStore } from "./store/useAppStore"
-
-const Layout = lazy(() => import("./components/Layout"))
 
 export default function App() {
   const accounts = useAppStore((s) => s.accounts)

@@ -28,7 +28,6 @@ import StatusBadge from './StatusBadge'
 const POLL_INTERVAL = 5
 
 export default function NumberCard({ request }: { request: ActiveRequest }) {
-  const { resolveRequest, removeRequest, updateRequest, addHistory } = useAppStore()
   const token = useAccountToken(request.accountId)
   const accountLabel = useAccountLabel(request.accountId)
   const [countdown, setCountdown] = useState(POLL_INTERVAL)
@@ -51,7 +50,7 @@ export default function NumberCard({ request }: { request: ActiveRequest }) {
           api.getSms(currentToken, currentRequest.requestId)
             .then((res) => {
               if (res.sms_code) {
-                resolveRequest(currentRequest.requestId, res.sms_code)
+                useAppStore.getState().resolveRequest(currentRequest.requestId, res.sms_code)
                 notifications.show({
                   title: 'SMS Received!',
                   message: `${currentRequest.number} → ${res.sms_code}`,
@@ -67,7 +66,7 @@ export default function NumberCard({ request }: { request: ActiveRequest }) {
       })
     }, 1000)
     return () => clearInterval(tick)
-  }, [shouldPoll, resolveRequest])
+  }, [shouldPoll])
 
   const handleSetStatus = async (s: 'ready' | 'close' | 'reject' | 'used') => {
     if (!token) return
@@ -81,10 +80,10 @@ export default function NumberCard({ request }: { request: ActiveRequest }) {
         })
         return
       }
-      updateRequest(request.requestId, { status: s })
+      useAppStore.getState().updateRequest(request.requestId, { status: s })
       if (s === 'close' || s === 'reject') {
-        addHistory({ ...request, status: s, resolvedAt: new Date().toISOString() })
-        setTimeout(() => removeRequest(request.requestId), 1500)
+        useAppStore.getState().addHistory({ ...request, status: s, resolvedAt: new Date().toISOString() })
+        setTimeout(() => useAppStore.getState().removeRequest(request.requestId), 1500)
       }
     } catch (e: unknown) {
       notifications.show({

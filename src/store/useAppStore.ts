@@ -148,5 +148,5 @@ export const useAccountLabel = (accountId: string) =>
     return acc?.label ?? null
   })
 
-export const useActiveAccount = () =>
-  useAppStore((s) => s.accounts.find((a) => a.id === s.activeAccountId) ?? null)
+export const useActiveAccountLabel = () =>
+  useAppStore((s) => s.accounts.find((a) => a.id === s.activeAccountId)?.label ?? null)

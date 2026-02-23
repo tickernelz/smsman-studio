@@ -17,12 +17,12 @@ import { IconApps, IconChartBar, IconSearch, IconWorld } from "@tabler/icons-rea
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
 import { api } from "../api/smsmanClient"
-import { useActiveAccount, useActiveAccountToken } from "../store/useAppStore"
+import { useActiveAccountId, useActiveAccountToken } from "../store/useAppStore"
 
 const PAGE_SIZE = 50
 
 export default function Explorer() {
-  const activeAccount = useActiveAccount()
+  const activeAccountId = useActiveAccountId()
   const token = useActiveAccountToken()
   const [countrySearch, setCountrySearch] = useState('')
   const [appSearch, setAppSearch] = useState('')
@@ -144,7 +144,7 @@ export default function Explorer() {
     setLimitPage(1)
   }, [])
 
-  if (!activeAccount) {
+  if (!activeAccountId) {
     return (
       <Stack align="center" pt="xl">
         <Text c="dimmed">No active account selected.</Text>

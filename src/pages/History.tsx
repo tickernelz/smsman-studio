@@ -10,11 +10,11 @@ import {
   Tooltip,
 } from "@mantine/core"
 import { IconDownload, IconTrash } from "@tabler/icons-react"
-import { useMemo } from "react"
 import StatusBadge from "../components/StatusBadge"
-import { useActiveAccount, useAppStore } from "../store/useAppStore"
+import { useMemo } from "react"
+import { useActiveAccountId, useActiveAccountLabel, useAppStore, type HistoryEntry } from "../store/useAppStore"
 
-function exportCsv(data: ReturnType<typeof useAppStore.getState>['history']) {
+function exportCsv(data: HistoryEntry[]) {
   const headers = [
     'Time',
     'Account',
@@ -46,14 +46,15 @@ function exportCsv(data: ReturnType<typeof useAppStore.getState>['history']) {
 }
 
 export default function History() {
-  const { history, clearHistory } = useAppStore()
-  const activeAccount = useActiveAccount()
-  const activeAccountId = useAppStore((s) => s.activeAccountId)
-
+  const activeAccountId = useActiveAccountId()
+  const activeAccountLabel = useActiveAccountLabel()
+  const history = useAppStore((s) => s.history)
   const myHistory = useMemo(
     () => history.filter((h) => h.accountId === activeAccountId),
     [history, activeAccountId]
   )
+  const totalHistoryCount = history.length
+  const clearHistory = useAppStore((s) => s.clearHistory)
 
   return (
     <Stack>
@@ -62,7 +63,7 @@ export default function History() {
         <Group gap="xs">
           <Text size="sm" c="dimmed">
             {myHistory.length} entries
-            {history.length !== myHistory.length && ` (${history.length} total)`}
+            {totalHistoryCount !== myHistory.length && ` (${totalHistoryCount} total)`}
           </Text>
           <Tooltip label="Export this account's history to CSV">
             <ActionIcon
@@ -88,7 +89,7 @@ export default function History() {
 
       {myHistory.length === 0 ? (
         <Text c="dimmed" ta="center" py="xl">
-          No history for {activeAccount?.label ?? 'this account'} yet.
+          No history for {activeAccountLabel ?? 'this account'} yet.
         </Text>
       ) : (
         <ScrollArea h="calc(100vh - 180px)">

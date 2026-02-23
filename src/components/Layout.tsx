@@ -29,15 +29,14 @@ import {
   IconTrash,
   IconWorld,
 } from "@tabler/icons-react"
-import { lazy, useState } from "react"
-import { useActiveAccount, useAppStore } from "../store/useAppStore"
+import { useMemo, useState } from "react"
+import { useActiveAccountId, useActiveAccountLabel, useAppStore } from "../store/useAppStore"
 import AccountModal from "./AccountModal"
-
-const Dashboard = lazy(() => import("../pages/Dashboard"))
-const Numbers = lazy(() => import("../pages/Numbers"))
-const Prices = lazy(() => import("../pages/Prices"))
-const Explorer = lazy(() => import("../pages/Explorer"))
-const History = lazy(() => import("../pages/History"))
+import Dashboard from "../pages/Dashboard"
+import Numbers from "../pages/Numbers"
+import Prices from "../pages/Prices"
+import Explorer from "../pages/Explorer"
+import History from "../pages/History"
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -55,12 +54,18 @@ export default function Layout() {
   const scheme = useComputedColorScheme('dark')
 
   const accounts = useAppStore((s) => s.accounts)
-  const activeAccountId = useAppStore((s) => s.activeAccountId)
-  const { setActiveAccount, removeAccount } = useAppStore()
-  const activeAccount = useActiveAccount()
+  const activeAccountId = useActiveAccountId()
+  const activeAccountLabel = useActiveAccountLabel()
   const activeRequests = useAppStore((s) => s.activeRequests)
+  const myActiveRequests = useMemo(
+    () => activeRequests.filter((r) => r.accountId === activeAccountId),
+    [activeRequests, activeAccountId]
+  )
 
-  const editAccount = editingAccount ? accounts.find((a) => a.id === editingAccount) : undefined
+  const editAccount = useMemo(
+    () => (editingAccount ? accounts.find((a) => a.id === editingAccount) : undefined),
+    [editingAccount, accounts]
+  )
 
   const renderPage = () => {
     switch (page) {
@@ -78,8 +83,6 @@ export default function Layout() {
         return <Dashboard />
     }
   }
-
-  const myActiveRequests = activeRequests.filter((r) => r.accountId === activeAccountId)
 
   return (
     <>
@@ -105,12 +108,12 @@ export default function Layout() {
                     rightSection={<IconChevronDown size={12} />}
                     leftSection={
                       <Avatar size={18} color="blue" radius="xl">
-                        {activeAccount?.label?.[0]?.toUpperCase() ?? '?'}
+                        {activeAccountLabel?.[0]?.toUpperCase() ?? '?'}
                       </Avatar>
                     }
                   >
                     <Text size="xs" maw={100} truncate>
-                      {activeAccount?.label ?? 'No account'}
+                      {activeAccountLabel ?? 'No account'}
                     </Text>
                   </Button>
                 </Menu.Target>
@@ -120,7 +123,7 @@ export default function Layout() {
                     {accounts.map((acc) => (
                       <Menu.Item
                         key={acc.id}
-                        onClick={() => setActiveAccount(acc.id)}
+                        onClick={() => useAppStore.getState().setActiveAccount(acc.id)}
                         rightSection={
                           acc.id === activeAccountId ? (
                             <Badge size="xs" color="blue">
@@ -141,18 +144,18 @@ export default function Layout() {
                     ))}
                   </ScrollArea.Autosize>
                   <Divider my={4} />
-                  {activeAccount && (
+                  {activeAccountId && (
                     <>
                       <Menu.Item
                         leftSection={<IconEdit size={14} />}
-                        onClick={() => setEditingAccount(activeAccount.id)}
+                        onClick={() => setEditingAccount(activeAccountId)}
                       >
                         Edit Account
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconTrash size={14} />}
                         color="red"
-                        onClick={() => removeAccount(activeAccount.id)}
+                        onClick={() => useAppStore.getState().removeAccount(activeAccountId)}
                         disabled={accounts.length <= 1}
                       >
                         Remove Account
@@ -228,7 +231,7 @@ export default function Layout() {
                       </Avatar>
                     }
                     active={acc.id === activeAccountId}
-                    onClick={() => setActiveAccount(acc.id)}
+                    onClick={() => useAppStore.getState().setActiveAccount(acc.id)}
                     variant="filled"
                     style={{ borderRadius: 8, fontSize: 12 }}
                     rightSection={

@@ -17,12 +17,16 @@ import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { api } from "../api/smsmanClient"
 import NumberCard from "../components/NumberCard"
-import { useActiveAccount, useActiveAccountToken, useAppStore } from "../store/useAppStore"
+import { useActiveAccountId, useActiveAccountToken, useAppStore } from "../store/useAppStore"
 
 export default function Numbers() {
-  const activeAccount = useActiveAccount()
+  const activeAccountId = useActiveAccountId()
   const token = useActiveAccountToken()
-  const { activeRequests, addRequest } = useAppStore()
+  const activeRequests = useAppStore((s) => s.activeRequests)
+  const myRequests = useMemo(
+    () => activeRequests.filter((r) => r.accountId === activeAccountId),
+    [activeRequests, activeAccountId]
+  )
   const [countryId, setCountryId] = useState<string | null>(null)
   const [appId, setAppId] = useState<string | null>(null)
   const [maxPrice, setMaxPrice] = useState<number | string>('')
@@ -70,13 +74,8 @@ export default function Numbers() {
     [applications]
   )
 
-  const myRequests = useMemo(
-    () => activeRequests.filter((r) => r.accountId === activeAccount?.id),
-    [activeRequests, activeAccount?.id]
-  )
-
   const handleGetNumber = async () => {
-    if (!activeAccount || !token) return
+    if (!activeAccountId || !token) return
     setLoading(true)
     try {
       const res = await api.getNumber(token, {
@@ -99,7 +98,7 @@ export default function Numbers() {
       const countryName = countries?.[res.country_id]?.title ?? String(res.country_id)
       const serviceName = applications?.[res.application_id]?.title ?? String(res.application_id)
 
-      addRequest({
+      useAppStore.getState().addRequest({
         requestId: res.request_id,
         number: res.number,
         countryId: res.country_id,
@@ -109,7 +108,7 @@ export default function Numbers() {
         smsCode: null,
         status: 'pending',
         createdAt: new Date().toISOString(),
-        accountId: activeAccount.id,
+        accountId: activeAccountId,
       })
 
       notifications.show({
@@ -128,7 +127,7 @@ export default function Numbers() {
     }
   }
 
-  if (!activeAccount) {
+  if (!activeAccountId) {
     return (
       <Stack align="center" pt="xl">
         <Text c="dimmed">No active account selected.</Text>
